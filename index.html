@@ -19,10 +19,22 @@
             top: 0;
             z-index: 1000;
             transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+        }
+        .navbar-brand {
+            padding: 0;
         }
         .navbar.scrolled {
             background: #2c3e50 !important;
-            padding: 10px 0;
+            padding: 0.5rem 1rem;
+        }
+        .navbar.scrolled .navbar-brand img {
+            width: 40px;
+            transition: all 0.3s ease;
+        }
+        .navbar-brand img {
+            width: 100px;
+            transition: all 0.3s ease;
         }
         .category-title {
             background: #2c3e50;
@@ -47,8 +59,10 @@
         }
         .product-img {
             border-radius: 18px 18px 0 0;
-            height: 260px;
-            object-fit: cover;
+            width: 100%;
+            height: auto;
+            max-height: 290px;
+            object-fit: contain;
         }
         .product-title {
             font-weight: bold;
@@ -118,11 +132,11 @@
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #2a3d57e5;">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center" href="#">
-            <img src="https://dfcdn.defacto.com.tr/AssetsV2/dist/img/de-facto-logo-light-v2.svg" width="40" class="me-2" alt="logo">
-            متجر النسر
+            <img src="Logo (1).png" width="100" class="me-2" alt="logo">
+            ابيض و اسود 
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
             <span class="navbar-toggler-icon"></span>
@@ -138,10 +152,10 @@
 </nav>
 
 <!-- Hero Section -->
-<section class="text-center py-5" style="background: linear-gradient(90deg,#2c3e50 60%,#e74c3c 100%); color:#fff;">
+<section class="text-center py-5" style="background: linear-gradient(90deg,#2f4250f6 60%,#54a7b3 100%); color:#fff;">
     <div class="container">
-        <h1 class="display-4 mb-3">مرحباً بك في متجر النسر</h1>
-        <p class="lead mb-4">أفضل المنتجات الشبابية والبناتية بأحدث صيحات الموضة وجودة عالية وأسعار منافسة</p>
+        <h1 class="display-4 mb-3">في متجر ابيض و اسود </h1>
+        <p class="lead mb-4"> هتلاقي كل االلبس الي انت بدور عليه بسعر وجوده مفيش زيه </p>
         <a href="#men" class="btn btn-light btn-lg mx-2">تسوق شبابي</a>
         <a href="#women" class="btn btn-outline-light btn-lg mx-2">تسوق بناتي</a>
     </div>
@@ -154,9 +168,9 @@
     </div>
     <div class="row g-4">
         <!-- Product 1 -->
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card product-card h-100">
-                <img src="men1.jpg" class="product-img" alt="تيشرت رياضي">
+                <img src="1.jpg" class="product-img" alt="تيشرت رياضي">
                 <div class="card-body">
                     <div class="product-title mb-2">تيشرت رياضي مميز</div>
                     <div class="mb-2 text-muted">قطن 100% - جميع المقاسات</div>
@@ -168,7 +182,7 @@
             </div>
         </div>
         <!-- Product 2 -->
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card product-card h-100">
                 <img src="men2.jpg" class="product-img" alt="جينز موضة">
                 <div class="card-body">
@@ -182,7 +196,7 @@
             </div>
         </div>
         <!-- Product 3 -->
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card product-card h-100">
                 <img src="men3.jpg" class="product-img" alt="حذاء رياضي">
                 <div class="card-body">
@@ -205,7 +219,7 @@
     </div>
     <div class="row g-4">
         <!-- Product 1 -->
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card product-card h-100">
                 <img src="women1.jpg" class="product-img" alt="فستان سهرة">
                 <div class="card-body">
@@ -219,7 +233,7 @@
             </div>
         </div>
         <!-- Product 2 -->
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card product-card h-100">
                 <img src="women2.jpg" class="product-img" alt="بلوزة موضة">
                 <div class="card-body">
@@ -233,7 +247,7 @@
             </div>
         </div>
         <!-- Product 3 -->
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card product-card h-100">
                 <img src="women3.jpg" class="product-img" alt="حقيبة يد">
                 <div class="card-body">
@@ -346,9 +360,11 @@
             <div class="col-md-6 mb-3">
                 <h5>معلومات التواصل</h5>
                 <ul class="list-unstyled">
-                    <li><i class="bi bi-geo-alt"></i> القاهرة، مصر</li>
-                    <li><i class="bi bi-phone"></i> 01234567890</li>
-                    <li><i class="bi bi-envelope"></i> info@store.com</li>
+                    <li><i class="bi bi-geo-alt"></i> الجيزه- امبابه </li>
+                    <li><i class="bi bi-phone"></i> 01280440587</li>
+                    <li><i class="bi bi-envelope"></i> naser@gmail.com</li>
+                    <li class="mt-2">لدينا كميات بي سعر المصنع اتصل بينا علي الارقام دي:</li>
+                    <li><i class="bi bi-telephone"></i> 01280440587 &nbsp;&nbsp;&nbsp; <i class="bi bi-telephone"></i> 01014717525</li>
                 </ul>
             </div>
             <div class="col-md-6 mb-3">
@@ -359,7 +375,7 @@
             </div>
         </div>
         <div class="text-center mt-3">
-            جميع الحقوق محفوظة &copy; متجر النسر 2024
+            جميع الحقوق محفوظة &copy; متجر النسر 2025
         </div>
     </div>
 </footer>
@@ -372,14 +388,14 @@
 <script>
     // إعدادات Firebase
     const firebaseConfig = {
-    apiKey: "AIzaSyCSdIbH7AIUknrBhOkB2zjCRuwAUsUL4o8",
-    authDomain: "brand-7d188.firebaseapp.com",
-    projectId: "brand-7d188",
-    storageBucket: "brand-7d188.firebasestorage.app",
-    messagingSenderId: "984271643354",
-    appId: "1:984271643354:web:e5d7ac7018c0d015d4fbe3",
-    measurementId: "G-N0VFC9B4XZ"
-  };
+        apiKey: "AIzaSyD4NiKlU6SIJVxbnbk60SkRt8BNqlonk-U",
+        authDomain: "mina-project-c10b2.firebaseapp.com",
+        databaseURL: "https://mina-project-c10b2-default-rtdb.firebaseio.com",
+        projectId: "mina-project-c10b2",
+        storageBucket: "mina-project-c10b2.firebasestorage.app",
+        messagingSenderId: "1088494592963",
+        appId: "1:1088494592963:web:de6a787bc3b1694ccd1376"
+    };
 
     // تهيئة Firebase
     firebase.initializeApp(firebaseConfig);
