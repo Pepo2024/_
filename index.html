@@ -298,6 +298,47 @@
   </div>
 </div>
 
+<!-- قسم التعليقات -->
+<section class="container mt-5">
+    <div class="text-center">
+        <span class="category-title">التعليقات</span>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- نموذج إضافة تعليق -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">أضف تعليقك</h5>
+                    <form id="commentForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="commentName" placeholder="اسمك" required>
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" id="commentText" rows="3" placeholder="اكتب تعليقك هنا..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">نشر التعليق</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- عرض التعليقات -->
+            <div id="commentsList" class="mb-5">
+                <!-- سيتم إضافة التعليقات هنا تلقائياً -->
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- عداد الزوار -->
+<div class="container text-center mb-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">عدد الزوار</h5>
+            <p class="display-4" id="visitorCount">0</p>
+        </div>
+    </div>
+</div>
+
 <!-- Footer -->
 <footer class="footer mt-5">
     <div class="container">
@@ -436,6 +477,73 @@
             console.error('خطأ في إرسال الطلب:', error);
             alert('حدث خطأ في النظام. يرجى المحاولة مرة أخرى.');
         }
+    });
+
+    // إدارة التعليقات
+    const commentsRef = db.ref('comments');
+    const visitorRef = db.ref('visitors');
+
+    // إضافة تعليق جديد
+    document.getElementById('commentForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('commentName').value.trim();
+        const text = document.getElementById('commentText').value.trim();
+        
+        if (name && text) {
+            commentsRef.push({
+                name: name,
+                text: text,
+                date: new Date().toISOString()
+            }).then(() => {
+                document.getElementById('commentForm').reset();
+                alert('تم نشر تعليقك بنجاح!');
+            }).catch(error => {
+                console.error('خطأ في إضافة التعليق:', error);
+                alert('حدث خطأ أثناء إضافة التعليق. حاول مرة أخرى.');
+            });
+        }
+    });
+
+    // عرض التعليقات
+    commentsRef.on('value', (snapshot) => {
+        const commentsList = document.getElementById('commentsList');
+        commentsList.innerHTML = '';
+        
+        const comments = [];
+        snapshot.forEach((childSnapshot) => {
+            const comment = childSnapshot.val();
+            comments.push({
+                id: childSnapshot.key,
+                ...comment
+            });
+        });
+
+        // ترتيب التعليقات من الأحدث إلى الأقدم
+        comments.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        comments.forEach(comment => {
+            const commentDiv = document.createElement('div');
+            commentDiv.className = 'card mb-3';
+            commentDiv.innerHTML = `
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle mb-0 text-primary">${comment.name}</h6>
+                        <small class="text-muted">${new Date(comment.date).toLocaleString('ar-EG')}</small>
+                    </div>
+                    <p class="card-text">${comment.text}</p>
+                </div>
+            `;
+            commentsList.appendChild(commentDiv);
+        });
+    });
+
+    // عداد الزوار
+    visitorRef.transaction((currentCount) => {
+        return (currentCount || 0) + 1;
+    });
+
+    visitorRef.on('value', (snapshot) => {
+        document.getElementById('visitorCount').textContent = snapshot.val() || 0;
     });
 </script>
 </body>
