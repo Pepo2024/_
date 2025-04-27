@@ -370,29 +370,128 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
-    // إعدادات Firebase (استبدل القيم بقيم مشروعك من Firebase)
+    // إعدادات Firebase
     const firebaseConfig = {
-  apiKey: "AIzaSyD4NiKlU6SIJVxbnbk60SkRt8BNqlonk-U",
-  authDomain: "mina-project-c10b2.firebaseapp.com",
-  databaseURL: "https://mina-project-c10b2-default-rtdb.firebaseio.com",
-  projectId: "mina-project-c10b2",
-  storageBucket: "mina-project-c10b2.firebasestorage.app",
-  messagingSenderId: "1088494592963",
-  appId: "1:1088494592963:web:de6a787bc3b1694ccd1376"
-};
+        apiKey: "AIzaSyD4NiKlU6SIJVxbnbk60SkRt8BNqlonk-U",
+        authDomain: "mina-project-c10b2.firebaseapp.com",
+        databaseURL: "https://mina-project-c10b2-default-rtdb.firebaseio.com",
+        projectId: "mina-project-c10b2",
+        storageBucket: "mina-project-c10b2.firebasestorage.app",
+        messagingSenderId: "1088494592963",
+        appId: "1:1088494592963:web:de6a787bc3b1694ccd1376"
+    };
 
-    // التحقق من صحة إعدادات Firebase
-    if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-        console.error("يرجى إضافة إعدادات Firebase الصحيحة من لوحة تحكم Firebase");
-        alert("يرجى إضافة إعدادات Firebase الصحيحة من لوحة تحكم Firebase");
-    } else {
+    // تهيئة Firebase مع معالجة الأخطاء
+    try {
         firebase.initializeApp(firebaseConfig);
+        console.log("تم الاتصال بقاعدة البيانات بنجاح");
+    } catch (error) {
+        console.error("خطأ في الاتصال بقاعدة البيانات:", error);
+        alert("حدث خطأ في الاتصال بقاعدة البيانات. يرجى التأكد من اتصال الإنترنت وإعادة تحميل الصفحة.");
     }
 
     const db = firebase.database();
 
-    // متغير لتخزين سعر المنتج الحالي
-    let currentUnitPrice = 0;
+    // إدارة التعليقات
+    const commentsRef = db.ref('comments');
+    const visitorRef = db.ref('visitors');
+
+    // إضافة تعليق جديد
+    document.getElementById('commentForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('commentName').value.trim();
+        const text = document.getElementById('commentText').value.trim();
+        
+        if (name && text) {
+            // إظهار مؤشر التحميل
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            submitButton.disabled = true;
+            submitButton.textContent = 'جاري النشر...';
+
+            commentsRef.push({
+                name: name,
+                text: text,
+                date: new Date().toISOString()
+            }).then(() => {
+                document.getElementById('commentForm').reset();
+                alert('تم نشر تعليقك بنجاح!');
+            }).catch(error => {
+                console.error('خطأ في إضافة التعليق:', error);
+                alert('حدث خطأ أثناء إضافة التعليق. يرجى التأكد من اتصال الإنترنت والمحاولة مرة أخرى.');
+            }).finally(() => {
+                // إعادة تعيين حالة الزر
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            });
+        } else {
+            alert('يرجى ملء جميع الحقول المطلوبة');
+        }
+    });
+
+    // عرض التعليقات مع معالجة الأخطاء
+    commentsRef.on('value', (snapshot) => {
+        const commentsList = document.getElementById('commentsList');
+        try {
+            commentsList.innerHTML = '';
+            
+            const comments = [];
+            snapshot.forEach((childSnapshot) => {
+                const comment = childSnapshot.val();
+                comments.push({
+                    id: childSnapshot.key,
+                    ...comment
+                });
+            });
+
+            // ترتيب التعليقات من الأحدث إلى الأقدم
+            comments.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (comments.length === 0) {
+                commentsList.innerHTML = '<p class="text-center text-muted">لا توجد تعليقات حتى الآن</p>';
+                return;
+            }
+
+            comments.forEach(comment => {
+                const commentDiv = document.createElement('div');
+                commentDiv.className = 'card mb-3';
+                commentDiv.innerHTML = `
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="card-subtitle mb-0 text-primary">${comment.name}</h6>
+                            <small class="text-muted">${new Date(comment.date).toLocaleString('ar-EG')}</small>
+                        </div>
+                        <p class="card-text">${comment.text}</p>
+                    </div>
+                `;
+                commentsList.appendChild(commentDiv);
+            });
+        } catch (error) {
+            console.error('خطأ في عرض التعليقات:', error);
+            commentsList.innerHTML = '<p class="text-center text-danger">حدث خطأ في تحميل التعليقات</p>';
+        }
+    }, (error) => {
+        console.error('خطأ في قراءة التعليقات:', error);
+        document.getElementById('commentsList').innerHTML = '<p class="text-center text-danger">حدث خطأ في تحميل التعليقات</p>';
+    });
+
+    // عداد الزوار مع معالجة الأخطاء
+    try {
+        visitorRef.transaction((currentCount) => {
+            return (currentCount || 0) + 1;
+        }).catch(error => {
+            console.error('خطأ في تحديث عداد الزوار:', error);
+        });
+
+        visitorRef.on('value', (snapshot) => {
+            document.getElementById('visitorCount').textContent = snapshot.val() || 0;
+        }, (error) => {
+            console.error('خطأ في قراءة عداد الزوار:', error);
+            document.getElementById('visitorCount').textContent = '0';
+        });
+    } catch (error) {
+        console.error('خطأ في إعداد عداد الزوار:', error);
+    }
 
     // إضافة تأثير التثبيت للهيدر
     window.addEventListener('scroll', function() {
@@ -477,73 +576,6 @@
             console.error('خطأ في إرسال الطلب:', error);
             alert('حدث خطأ في النظام. يرجى المحاولة مرة أخرى.');
         }
-    });
-
-    // إدارة التعليقات
-    const commentsRef = db.ref('comments');
-    const visitorRef = db.ref('visitors');
-
-    // إضافة تعليق جديد
-    document.getElementById('commentForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const name = document.getElementById('commentName').value.trim();
-        const text = document.getElementById('commentText').value.trim();
-        
-        if (name && text) {
-            commentsRef.push({
-                name: name,
-                text: text,
-                date: new Date().toISOString()
-            }).then(() => {
-                document.getElementById('commentForm').reset();
-                alert('تم نشر تعليقك بنجاح!');
-            }).catch(error => {
-                console.error('خطأ في إضافة التعليق:', error);
-                alert('حدث خطأ أثناء إضافة التعليق. حاول مرة أخرى.');
-            });
-        }
-    });
-
-    // عرض التعليقات
-    commentsRef.on('value', (snapshot) => {
-        const commentsList = document.getElementById('commentsList');
-        commentsList.innerHTML = '';
-        
-        const comments = [];
-        snapshot.forEach((childSnapshot) => {
-            const comment = childSnapshot.val();
-            comments.push({
-                id: childSnapshot.key,
-                ...comment
-            });
-        });
-
-        // ترتيب التعليقات من الأحدث إلى الأقدم
-        comments.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        comments.forEach(comment => {
-            const commentDiv = document.createElement('div');
-            commentDiv.className = 'card mb-3';
-            commentDiv.innerHTML = `
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="card-subtitle mb-0 text-primary">${comment.name}</h6>
-                        <small class="text-muted">${new Date(comment.date).toLocaleString('ar-EG')}</small>
-                    </div>
-                    <p class="card-text">${comment.text}</p>
-                </div>
-            `;
-            commentsList.appendChild(commentDiv);
-        });
-    });
-
-    // عداد الزوار
-    visitorRef.transaction((currentCount) => {
-        return (currentCount || 0) + 1;
-    });
-
-    visitorRef.on('value', (snapshot) => {
-        document.getElementById('visitorCount').textContent = snapshot.val() || 0;
     });
 </script>
 </body>
