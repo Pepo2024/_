@@ -180,6 +180,24 @@
         </div>
     </div>
 
+    <!-- نافذة نجاح الطلب -->
+    <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    <h4 class="mb-3">تم إتمام عملية الطلب بنجاح!</h4>
+                    <p class="text-muted mb-4">شكراً لثقتك بنا. سنقوم بالتواصل معك قريباً لتأكيد الطلب.</p>
+                    <button type="button" class="btn btn-success" id="continueBtn">
+                        <i class="bi bi-arrow-left"></i> اكمل
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -330,7 +348,65 @@
             document.getElementById('finalTotal').textContent = finalTotal.toLocaleString() + ' ج.م';
         }
 
-        // إرسال الطلب
+        // دالة حساب المجموع النهائي
+        function calculateFinalTotal() {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            return total - (total * currentDiscount);
+        }
+
+        // دالة إظهار نافذة النجاح
+        function showSuccessModal() {
+            // إخفاء نموذج الطلب
+            document.getElementById('orderForm').style.display = 'none';
+            
+            // إنشاء وعرض النافذة المنبثقة
+            const modalElement = document.getElementById('successModal');
+            const modal = new bootstrap.Modal(modalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+            
+            // إضافة مستمع لزر المتابعة
+            const continueBtn = document.getElementById('continueBtn');
+            continueBtn.onclick = async function() {
+                try {
+                    // مسح السلة من Firebase
+                    await cartRef.remove();
+                    
+                    // مسح السلة من localStorage
+                    localStorage.removeItem('user_cart');
+                    
+                    // إخفاء النافذة المنبثقة
+                    modal.hide();
+                    
+                    // الانتقال إلى الصفحة الرئيسية
+                    window.location.href = 'index.html';
+                } catch (error) {
+                    console.error('خطأ في مسح السلة:', error);
+                    alert('حدث خطأ أثناء مسح السلة. يرجى المحاولة مرة أخرى.');
+                }
+            };
+            
+            // إظهار النافذة المنبثقة
+            modal.show();
+        }
+
+        // دالة إرسال الطلب
+        async function submitOrder(order) {
+            try {
+                // إرسال الطلب إلى Firebase
+                await db.ref('orders').push(order);
+                
+                // إظهار نافذة النجاح
+                showSuccessModal();
+                
+            } catch (error) {
+                console.error('خطأ:', error);
+                alert('حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.');
+            }
+        }
+
+        // مستمع حدث إرسال النموذج
         document.getElementById('orderForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -343,38 +419,21 @@
                 return;
             }
 
-            const orderData = {
+            const order = {
                 items: cart,
-                total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-                discount: currentDiscount * 100,
-                discountCode: appliedDiscountCode,
-                finalTotal: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * (1 - currentDiscount),
                 customerName: customerName,
                 customerPhone: customerPhone,
                 customerAddress: customerAddress,
                 customerNote: document.getElementById('customerNote').value.trim(),
+                discountCode: appliedDiscountCode,
+                discountAmount: currentDiscount,
+                totalAmount: calculateFinalTotal(),
                 orderDate: new Date().toISOString(),
                 status: 'جديد'
             };
 
-            // إرسال الطلب إلى Firebase
-            db.ref('orders').push(orderData)
-                .then(() => {
-                    alert('تم إرسال طلبك بنجاح!');
-                    // مسح السلة بعد إتمام الطلب
-                    cartRef.set([])
-                        .then(() => {
-                            window.location.href = 'index.html';
-                        })
-                        .catch(error => {
-                            console.error('خطأ في مسح السلة:', error);
-                            window.location.href = 'index.html';
-                        });
-                })
-                .catch(error => {
-                    console.error('خطأ في إرسال الطلب:', error);
-                    alert('حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.');
-                });
+            // إرسال الطلب
+            submitOrder(order);
         });
     </script>
 </body>
