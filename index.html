@@ -671,45 +671,60 @@
         }
     });
 
+    // إضافة منتج للسلة
+    function addToCart(productId) {
+        const card = document.querySelector(`[data-product-id="${productId}"]`);
+        if (!card) return;
+
+        const product = {
+            id: productId,
+            name: card.querySelector('.product-title').textContent,
+            price: parseFloat(card.querySelector('.product-price').textContent),
+            image: card.querySelector('.product-img').src,
+            quantity: 1
+        };
+
+        if (cart[productId]) {
+            cart[productId].quantity += 1;
+        } else {
+            cart[productId] = product;
+        }
+
+        updateCart();
+        
+        // إظهار رسالة تأكيد
+        const toast = document.createElement('div');
+        toast.className = 'toast align-items-center text-white bg-success border-0';
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    تم إضافة المنتج إلى السلة
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container';
+            document.body.appendChild(toastContainer);
+        }
+        
+        toastContainer.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        setTimeout(() => toast.remove(), 3000);
+    }
+
     // تعديل زر إضافة المنتج للسلة
     document.querySelectorAll('.buy-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             const card = this.closest('.card');
-            const product = {
-                id: card.dataset.productId,
-                name: card.querySelector('.product-title').textContent,
-                price: parseFloat(card.querySelector('.product-price').textContent),
-                image: card.querySelector('.product-img').src
-            };
-            
-            addToCart(product);
-            
-            // إظهار رسالة تأكيد في الأعلى
-            const toast = document.createElement('div');
-            toast.className = 'toast align-items-center text-white bg-success border-0';
-            toast.setAttribute('role', 'alert');
-            toast.innerHTML = `
-                <div class="d-flex">
-                    <div class="toast-body">
-                        تم إضافة المنتج إلى السلة
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                </div>
-            `;
-            
-            // إنشاء حاوية الرسائل إذا لم تكن موجودة
-            let toastContainer = document.querySelector('.toast-container');
-            if (!toastContainer) {
-                toastContainer = document.createElement('div');
-                toastContainer.className = 'toast-container';
-                document.body.appendChild(toastContainer);
-            }
-            
-            toastContainer.appendChild(toast);
-            const bsToast = new bootstrap.Toast(toast);
-            bsToast.show();
-            setTimeout(() => toast.remove(), 3000);
+            const productId = card.dataset.productId;
+            addToCart(productId);
         });
     });
 
@@ -745,7 +760,7 @@
     });
 
     // إدارة السلة
-    let cart = [];
+    let cart = {};
     const CART_STORAGE_KEY = 'user_cart';
     const cartRef = db.ref('cart');
 
@@ -755,7 +770,7 @@
             cart = snapshot.val();
             localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
         } else {
-            cart = [];
+            cart = {};
             localStorage.removeItem(CART_STORAGE_KEY);
         }
         displayCartItems();
@@ -764,7 +779,7 @@
 
     // تحديث السلة في Firebase و localStorage
     function updateCart() {
-        if (cart.length === 0) {
+        if (Object.keys(cart).length === 0) {
             cartRef.remove();
             localStorage.removeItem(CART_STORAGE_KEY);
         } else {
@@ -809,18 +824,18 @@
                             <h6 class="mb-1">${item.name}</h6>
                             <p class="mb-1 text-muted">${item.price.toLocaleString()} ج.م</p>
                             <div class="quantity-control">
-                                <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity(${id}, -1)">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity('${id}', -1)">
                                     <i class="bi bi-dash"></i>
                                 </button>
                                 <span class="px-2">${item.quantity}</span>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity(${id}, 1)">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity('${id}', 1)">
                                     <i class="bi bi-plus"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="col-4 text-end">
                             <h6 class="text-danger">${(item.price * item.quantity).toLocaleString()} ج.م</h6>
-                            <button class="btn btn-sm btn-danger" onclick="removeFromCart(${id})">
+                            <button class="btn btn-sm btn-danger" onclick="removeFromCart('${id}')">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </div>
@@ -835,39 +850,23 @@
         document.getElementById('cartTotal').textContent = total.toLocaleString() + ' ج.م';
     }
 
-    // إضافة منتج للسلة
-    function addToCart(product) {
-        const existingItem = cart[product.id];
-        
-        if (existingItem) {
-            existingItem.quantity += 1;
-        } else {
-            cart[product.id] = {
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                image: product.image,
-                quantity: 1
-            };
-        }
-
-        updateCart();
-    }
-
     // تعديل وظيفة تحديث الكمية
     function updateQuantity(id, change) {
-        cart[id].quantity += change;
-        if (cart[id].quantity < 1) {
-            delete cart[id];
+        if (cart[id]) {
+            cart[id].quantity += change;
+            if (cart[id].quantity < 1) {
+                delete cart[id];
+            }
+            updateCart();
         }
-        updateCart();
-        return false;
     }
 
     // إزالة منتج من السلة
     function removeFromCart(id) {
-        delete cart[id];
-        updateCart();
+        if (cart[id]) {
+            delete cart[id];
+            updateCart();
+        }
     }
 
     // مسح السلة
