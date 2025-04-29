@@ -16,43 +16,104 @@
             border-radius: 15px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        .order-card:hover {
+            transform: translateY(-5px);
         }
         .product-img {
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             object-fit: cover;
-            border-radius: 8px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         .quantity-control {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
+            background: #f8f9fa;
+            padding: 5px 10px;
+            border-radius: 8px;
+            width: fit-content;
         }
         .quantity-control button {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .quantity-control button:hover {
+            background: #2c3e50;
+            color: white;
         }
         .form-control {
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #eee;
+            transition: all 0.3s;
         }
         .form-control:focus {
             border-color: #2c3e50;
-            box-shadow: 0 0 0 0.2rem rgba(44,62,80,0.25);
+            box-shadow: 0 0 0 0.2rem rgba(44,62,80,0.1);
         }
         .btn-success {
             background: #2c3e50;
             border: none;
-            padding: 10px 25px;
-            border-radius: 8px;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: bold;
+            transition: all 0.3s;
         }
         .btn-success:hover {
+            background: #1a252f;
+            transform: translateY(-2px);
+        }
+        .total-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .total-section h6 {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        .discount-input {
+            position: relative;
+        }
+        .discount-input .btn {
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-radius: 8px;
+        }
+        .discount-input .form-control {
+            padding-right: 100px;
+        }
+        .order-items-container {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        .order-items-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .order-items-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .order-items-container::-webkit-scrollbar-thumb {
+            background: #2c3e50;
+            border-radius: 10px;
+        }
+        .order-items-container::-webkit-scrollbar-thumb:hover {
             background: #1a252f;
         }
     </style>
@@ -62,7 +123,7 @@
         <div class="row">
             <div class="col-md-8">
                 <h2 class="mb-4">تفاصيل الطلب</h2>
-                <div id="orderItems" class="mb-4">
+                <div class="order-items-container" id="orderItems">
                     <!-- سيتم إضافة عناصر الطلب هنا -->
                 </div>
             </div>
@@ -85,27 +146,29 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">كود الخصم</label>
-                                <div class="input-group">
+                                <div class="discount-input">
                                     <input type="text" class="form-control" id="discountCode" placeholder="أدخل كود الخصم">
                                     <button class="btn btn-outline-secondary" type="button" onclick="applyDiscount()">تطبيق</button>
                                 </div>
-                                <small class="text-muted">أكواد الخصم المتاحة: WELCOME20 (20%) - SUMMER10 (10%)</small>
+                                <small class="text-muted">أدخل كود الخصم الخاص بك</small>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">تعليق آخر</label>
-                                <textarea class="form-control" id="customerNote"></textarea>
+                                <textarea class="form-control" id="customerNote" rows="3"></textarea>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6>المجموع الكلي:</h6>
-                                <h6 class="text-danger" id="orderTotal">0 ج.م</h6>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6>الخصم:</h6>
-                                <h6 class="text-success" id="discountAmount">0 ج.م</h6>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6>المجموع بعد الخصم:</h6>
-                                <h6 class="text-danger fw-bold" id="finalTotal">0 ج.م</h6>
+                            <div class="total-section">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6>المجموع الكلي:</h6>
+                                    <h6 class="text-danger" id="orderTotal">0 ج.م</h6>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6>الخصم:</h6>
+                                    <h6 class="text-success" id="discountAmount">0 ج.م</h6>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6>المجموع بعد الخصم:</h6>
+                                    <h6 class="text-danger fw-bold" id="finalTotal">0 ج.م</h6>
+                                </div>
                             </div>
                             <button type="submit" class="btn btn-success w-100">
                                 <i class="bi bi-bag-check"></i> إتمام الطلب
@@ -146,6 +209,10 @@
         cartRef.on('value', (snapshot) => {
             if (snapshot.exists()) {
                 cart = snapshot.val();
+                if (!cart || cart.length === 0) {
+                    window.location.href = 'index.html';
+                    return;
+                }
                 displayOrderItems();
                 updateOrderTotal();
                 applyDiscount(); // تطبيق الخصم التلقائي عند تحميل السلة
@@ -154,23 +221,28 @@
             }
         });
 
-        // عرض عناصر الطلب
+        // تعديل دالة عرض عناصر الطلب
         function displayOrderItems() {
             const orderItemsDiv = document.getElementById('orderItems');
             orderItemsDiv.innerHTML = '';
 
+            if (!cart || cart.length === 0) {
+                orderItemsDiv.innerHTML = '<div class="alert alert-info">السلة فارغة</div>';
+                return;
+            }
+
             cart.forEach((item, index) => {
                 const itemDiv = document.createElement('div');
-                itemDiv.className = 'card order-card';
+                itemDiv.className = 'card order-card mb-3';
                 itemDiv.innerHTML = `
                     <div class="card-body">
                         <div class="row align-items-center">
-                            <div class="col-2">
+                            <div class="col-3">
                                 <img src="${item.image}" class="product-img" alt="${item.name}">
                             </div>
-                            <div class="col-6">
-                                <h6 class="mb-1">${item.name}</h6>
-                                <p class="mb-1 text-muted">${item.price} ج.م</p>
+                            <div class="col-5">
+                                <h6 class="mb-2">${item.name}</h6>
+                                <p class="mb-2 text-muted">${item.price} ج.م</p>
                                 <div class="quantity-control">
                                     <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity(${index}, -1)">
                                         <i class="bi bi-dash"></i>
@@ -182,9 +254,9 @@
                                 </div>
                             </div>
                             <div class="col-4 text-end">
-                                <h6 class="text-danger">${(item.price * item.quantity).toLocaleString()} ج.م</h6>
+                                <h6 class="text-danger mb-2">${(item.price * item.quantity).toLocaleString()} ج.م</h6>
                                 <button class="btn btn-sm btn-danger" onclick="removeFromCart(${index})">
-                                    <i class="bi bi-trash"></i>
+                                    <i class="bi bi-trash"></i> حذف
                                 </button>
                             </div>
                         </div>
@@ -209,6 +281,11 @@
 
         // تحديث السلة
         function updateCart() {
+            if (!cart || cart.length === 0) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
             cartRef.set(cart)
                 .then(() => {
                     displayOrderItems();
@@ -220,17 +297,7 @@
         // تطبيق الخصم
         function applyDiscount() {
             const code = document.getElementById('discountCode').value.trim().toUpperCase();
-            const tshirtCount = cart.filter(item => item.name.includes('تيشرت')).reduce((sum, item) => sum + item.quantity, 0);
             
-            // التحقق من الخصم التلقائي لشراء 3 تيشرتات أو أكثر
-            if (tshirtCount >= 3) {
-                currentDiscount = 0.15; // 15% خصم
-                appliedDiscountCode = 'AUTO15';
-                document.getElementById('discountCode').value = 'AUTO15';
-                updateOrderTotal();
-                return;
-            }
-
             // التحقق من أكواد الخصم
             switch(code) {
                 case 'E20':
@@ -276,7 +343,8 @@
                 return;
             }
 
-            const order = {
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            const orderData = {
                 items: cart,
                 total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
                 discount: currentDiscount * 100,
@@ -287,19 +355,19 @@
                 customerAddress: customerAddress,
                 customerNote: document.getElementById('customerNote').value.trim(),
                 orderDate: new Date().toISOString(),
-                status: 'جديد'
+                status: 'جديد',
+                paymentMethod: paymentMethod,
+                paymentStatus: 'pending'
             };
 
-            db.ref('orders').push(order)
+            // إرسال الطلب مع معلومات الدفع
+            db.ref('orders').push(orderData)
                 .then(() => {
-                    cartRef.set([])
-                        .then(() => {
-                            alert('تم إرسال طلبك بنجاح!');
-                            window.location.href = 'index.html';
-                        });
+                    alert('تم إرسال طلبك بنجاح! سيتم التواصل معك لتأكيد الدفع.');
+                    window.location.href = 'index.html';
                 })
                 .catch(error => {
-                    console.error('خطأ في إرسال الطلب:', error);
+                    console.error('Error:', error);
                     alert('حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.');
                 });
         });
