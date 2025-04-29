@@ -84,12 +84,28 @@
                                 <input type="text" class="form-control" id="customerAddress" required>
                             </div>
                             <div class="mb-3">
+                                <label class="form-label">كود الخصم</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="discountCode" placeholder="أدخل كود الخصم">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="applyDiscount()">تطبيق</button>
+                                </div>
+                                <small class="text-muted">أكواد الخصم المتاحة: WELCOME20 (20%) - SUMMER10 (10%)</small>
+                            </div>
+                            <div class="mb-3">
                                 <label class="form-label">تعليق آخر</label>
                                 <textarea class="form-control" id="customerNote"></textarea>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h6>المجموع الكلي:</h6>
                                 <h6 class="text-danger" id="orderTotal">0 ج.م</h6>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6>الخصم:</h6>
+                                <h6 class="text-success" id="discountAmount">0 ج.م</h6>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6>المجموع بعد الخصم:</h6>
+                                <h6 class="text-danger fw-bold" id="finalTotal">0 ج.م</h6>
                             </div>
                             <button type="submit" class="btn btn-success w-100">
                                 <i class="bi bi-bag-check"></i> إتمام الطلب
@@ -123,6 +139,8 @@
         const cartRef = db.ref('cart');
 
         let cart = [];
+        let currentDiscount = 0;
+        let appliedDiscountCode = '';
 
         // تحميل السلة من Firebase
         cartRef.on('value', (snapshot) => {
@@ -130,6 +148,7 @@
                 cart = snapshot.val();
                 displayOrderItems();
                 updateOrderTotal();
+                applyDiscount(); // تطبيق الخصم التلقائي عند تحميل السلة
             } else {
                 window.location.href = 'index.html';
             }
@@ -198,10 +217,50 @@
                 .catch(error => console.error('خطأ في تحديث السلة:', error));
         }
 
+        // تطبيق الخصم
+        function applyDiscount() {
+            const code = document.getElementById('discountCode').value.trim().toUpperCase();
+            const tshirtCount = cart.filter(item => item.name.includes('تيشرت')).reduce((sum, item) => sum + item.quantity, 0);
+            
+            // التحقق من الخصم التلقائي لشراء 3 تيشرتات أو أكثر
+            if (tshirtCount >= 3) {
+                currentDiscount = 0.15; // 15% خصم
+                appliedDiscountCode = 'AUTO15';
+                document.getElementById('discountCode').value = 'AUTO15';
+                updateOrderTotal();
+                return;
+            }
+
+            // التحقق من أكواد الخصم
+            switch(code) {
+                case 'E20':
+                    currentDiscount = 0.20; // 20% خصم
+                    appliedDiscountCode = code;
+                    break;
+                case 'E10':
+                    currentDiscount = 0.10; // 10% خصم
+                    appliedDiscountCode = code;
+                    break;
+                default:
+                    if (code) {
+                        alert('كود الخصم غير صحيح');
+                        currentDiscount = 0;
+                        appliedDiscountCode = '';
+                    }
+            }
+
+            updateOrderTotal();
+        }
+
         // تحديث المجموع الكلي
         function updateOrderTotal() {
             const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const discountAmount = total * currentDiscount;
+            const finalTotal = total - discountAmount;
+
             document.getElementById('orderTotal').textContent = total.toLocaleString() + ' ج.م';
+            document.getElementById('discountAmount').textContent = discountAmount.toLocaleString() + ' ج.م';
+            document.getElementById('finalTotal').textContent = finalTotal.toLocaleString() + ' ج.م';
         }
 
         // إرسال الطلب
@@ -220,6 +279,9 @@
             const order = {
                 items: cart,
                 total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                discount: currentDiscount * 100,
+                discountCode: appliedDiscountCode,
+                finalTotal: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * (1 - currentDiscount),
                 customerName: customerName,
                 customerPhone: customerPhone,
                 customerAddress: customerAddress,
@@ -230,7 +292,6 @@
 
             db.ref('orders').push(order)
                 .then(() => {
-                    // مسح السلة بعد إتمام الطلب
                     cartRef.set([])
                         .then(() => {
                             alert('تم إرسال طلبك بنجاح!');
