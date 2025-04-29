@@ -287,7 +287,7 @@
                 <h6 class="mb-0 text-danger" id="cartTotal">0 ج.م</h6>
             </div>
             <div class="d-grid gap-2">
-                <button class="btn btn-success" id="checkoutBtn">
+                <button type="button" class="btn btn-success" id="checkoutBtn">
                     <i class="bi bi-bag-check"></i> إتمام الشراء
                 </button>
             </div>
@@ -747,6 +747,7 @@
     // إدارة السلة
     let cart = [];
     const CART_STORAGE_KEY = 'user_cart';
+    const cartRef = db.ref('cart');
 
     // تحميل السلة من localStorage عند تحميل الصفحة
     function loadCart() {
@@ -918,12 +919,22 @@
     });
 
     // تعديل زر إتمام الشراء
-    document.getElementById('checkoutBtn').addEventListener('click', function() {
+    document.getElementById('checkoutBtn').addEventListener('click', function(e) {
+        e.preventDefault();
         if (cart.length === 0) {
             alert('السلة فارغة');
             return;
         }
-        window.location.href = 'order.html';
+        
+        // حفظ السلة في Firebase قبل الانتقال
+        cartRef.set(cart)
+            .then(() => {
+                window.location.href = 'order.html';
+            })
+            .catch(error => {
+                console.error('خطأ في حفظ السلة:', error);
+                alert('حدث خطأ أثناء حفظ السلة. يرجى المحاولة مرة أخرى.');
+            });
     });
 
     // إضافة تأثير التلاشي للمنتجات
