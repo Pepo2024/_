@@ -940,11 +940,16 @@
     // إضافة تأثير التلاشي للمنتجات
     function checkVisibility() {
         const products = document.querySelectorAll('.product-card');
-        products.forEach(product => {
-            const rect = product.getBoundingClientRect();
-            const isVisible = (rect.top <= window.innerHeight * 0.8);
-            if (isVisible) {
+        products.forEach((product, index) => {
+            if (index === 0) {
+                // Make the first product visible immediately
                 product.classList.add('visible');
+            } else {
+                const rect = product.getBoundingClientRect();
+                const isVisible = (rect.top <= window.innerHeight * 0.8);
+                if (isVisible) {
+                    product.classList.add('visible');
+                }
             }
         });
     }
