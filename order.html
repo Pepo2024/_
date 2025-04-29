@@ -343,7 +343,6 @@
                 return;
             }
 
-            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
             const orderData = {
                 items: cart,
                 total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
@@ -355,19 +354,25 @@
                 customerAddress: customerAddress,
                 customerNote: document.getElementById('customerNote').value.trim(),
                 orderDate: new Date().toISOString(),
-                status: 'جديد',
-                paymentMethod: paymentMethod,
-                paymentStatus: 'pending'
+                status: 'جديد'
             };
 
-            // إرسال الطلب مع معلومات الدفع
+            // إرسال الطلب إلى Firebase
             db.ref('orders').push(orderData)
                 .then(() => {
-                    alert('تم إرسال طلبك بنجاح! سيتم التواصل معك لتأكيد الدفع.');
-                    window.location.href = 'index.html';
+                    alert('تم إرسال طلبك بنجاح!');
+                    // مسح السلة بعد إتمام الطلب
+                    cartRef.set([])
+                        .then(() => {
+                            window.location.href = 'index.html';
+                        })
+                        .catch(error => {
+                            console.error('خطأ في مسح السلة:', error);
+                            window.location.href = 'index.html';
+                        });
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.error('خطأ في إرسال الطلب:', error);
                     alert('حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.');
                 });
         });
