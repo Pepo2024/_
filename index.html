@@ -749,28 +749,35 @@
     const CART_STORAGE_KEY = 'user_cart';
     const cartRef = db.ref('cart');
 
-    // تحميل السلة من localStorage عند تحميل الصفحة
-    function loadCart() {
-        const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-        if (savedCart) {
-            cart = JSON.parse(savedCart);
+    // تحميل السلة من Firebase عند تحميل الصفحة
+    cartRef.on('value', (snapshot) => {
+        if (snapshot.exists()) {
+            cart = snapshot.val();
+            localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
         } else {
             cart = [];
+            localStorage.removeItem(CART_STORAGE_KEY);
         }
         displayCartItems();
         updateCartCount();
-    }
+    });
 
-    // تحديث السلة في localStorage وعرضها
+    // تحديث السلة في Firebase و localStorage
     function updateCart() {
-        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+        if (cart.length === 0) {
+            cartRef.remove();
+            localStorage.removeItem(CART_STORAGE_KEY);
+        } else {
+            cartRef.set(cart);
+            localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+        }
         displayCartItems();
         updateCartCount();
     }
 
     // تحديث عداد السلة
     function updateCartCount() {
-        const count = cart.reduce((total, item) => total + item.quantity, 0);
+        const count = Object.values(cart).reduce((total, item) => total + item.quantity, 0);
         document.getElementById('floatingCartCount').textContent = count;
     }
 
@@ -779,7 +786,7 @@
         const cartItemsDiv = document.getElementById('cartItems');
         cartItemsDiv.innerHTML = '';
 
-        if (cart.length === 0) {
+        if (Object.keys(cart).length === 0) {
             cartItemsDiv.innerHTML = `
                 <div class="text-center text-muted py-4">
                     <i class="bi bi-cart-x fs-1"></i>
@@ -789,7 +796,7 @@
             return;
         }
 
-        cart.forEach((item, index) => {
+        Object.entries(cart).forEach(([id, item]) => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'card mb-2';
             itemDiv.innerHTML = `
@@ -800,20 +807,20 @@
                         </div>
                         <div class="col-5">
                             <h6 class="mb-1">${item.name}</h6>
-                            <p class="mb-1 text-muted">${item.price} ج.م</p>
+                            <p class="mb-1 text-muted">${item.price.toLocaleString()} ج.م</p>
                             <div class="quantity-control">
-                                <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity(${index}, -1)">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity(${id}, -1)">
                                     <i class="bi bi-dash"></i>
                                 </button>
                                 <span class="px-2">${item.quantity}</span>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity(${index}, 1)">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity(${id}, 1)">
                                     <i class="bi bi-plus"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="col-4 text-end">
                             <h6 class="text-danger">${(item.price * item.quantity).toLocaleString()} ج.م</h6>
-                            <button class="btn btn-sm btn-danger" onclick="removeFromCart(${index})">
+                            <button class="btn btn-sm btn-danger" onclick="removeFromCart(${id})">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </div>
@@ -824,53 +831,52 @@
         });
 
         // تحديث المجموع الكلي
-        const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const total = Object.values(cart).reduce((sum, item) => sum + (item.price * item.quantity), 0);
         document.getElementById('cartTotal').textContent = total.toLocaleString() + ' ج.م';
     }
 
     // إضافة منتج للسلة
     function addToCart(product) {
-        const existingItem = cart.find(item => item.id === product.id);
+        const existingItem = cart[product.id];
         
         if (existingItem) {
             existingItem.quantity += 1;
         } else {
-            cart.push({
+            cart[product.id] = {
                 id: product.id,
                 name: product.name,
                 price: product.price,
                 image: product.image,
                 quantity: 1
-            });
+            };
         }
 
         updateCart();
     }
 
     // تعديل وظيفة تحديث الكمية
-    function updateQuantity(index, change) {
-        cart[index].quantity += change;
-        if (cart[index].quantity < 1) cart[index].quantity = 1;
+    function updateQuantity(id, change) {
+        cart[id].quantity += change;
+        if (cart[id].quantity < 1) {
+            delete cart[id];
+        }
         updateCart();
         return false;
     }
 
     // إزالة منتج من السلة
-    function removeFromCart(index) {
-        cart.splice(index, 1);
+    function removeFromCart(id) {
+        delete cart[id];
         updateCart();
     }
 
     // مسح السلة
     function clearCart() {
         if (confirm('هل أنت متأكد من مسح السلة؟')) {
-            cart = [];
+            cart = {};
             updateCart();
         }
     }
-
-    // تحميل السلة عند بدء الصفحة
-    document.addEventListener('DOMContentLoaded', loadCart);
 
     // إرسال الطلب إلى Firebase
     document.getElementById('orderForm').addEventListener('submit', function(e) {
@@ -887,11 +893,11 @@
         }
 
         let qty = parseInt(document.getElementById('productQty').value) || 1;
-        let total = currentUnitPrice * qty;
+        let total = cart[id].price * qty;
         
         const order = {
-            productName: document.getElementById('productName').value,
-            unitPrice: currentUnitPrice,
+            productName: cart[id].name,
+            unitPrice: cart[id].price,
             quantity: qty,
             totalPrice: total,
             customerName: customerName,
@@ -921,7 +927,7 @@
     // تعديل زر إتمام الشراء
     document.getElementById('checkoutBtn').addEventListener('click', function(e) {
         e.preventDefault();
-        if (cart.length === 0) {
+        if (Object.keys(cart).length === 0) {
             alert('السلة فارغة');
             return;
         }
@@ -929,6 +935,7 @@
         // حفظ السلة في Firebase قبل الانتقال
         cartRef.set(cart)
             .then(() => {
+                // الانتقال إلى صفحة إتمام الطلب
                 window.location.href = 'order.html';
             })
             .catch(error => {
