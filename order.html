@@ -227,7 +227,7 @@
         cartRef.on('value', (snapshot) => {
             if (snapshot.exists()) {
                 cart = snapshot.val();
-                if (!cart || cart.length === 0) {
+                if (!cart || Object.keys(cart).length === 0) {
                     window.location.href = 'index.html';
                     return;
                 }
@@ -244,12 +244,12 @@
             const orderItemsDiv = document.getElementById('orderItems');
             orderItemsDiv.innerHTML = '';
 
-            if (!cart || cart.length === 0) {
+            if (!cart || Object.keys(cart).length === 0) {
                 orderItemsDiv.innerHTML = '<div class="alert alert-info">السلة فارغة</div>';
                 return;
             }
 
-            cart.forEach((item, index) => {
+            Object.entries(cart).forEach(([id, item]) => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'card order-card mb-3';
                 itemDiv.innerHTML = `
@@ -262,18 +262,18 @@
                                 <h6 class="mb-2">${item.name}</h6>
                                 <p class="mb-2 text-muted">${item.price} ج.م</p>
                                 <div class="quantity-control">
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity(${index}, -1)">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity('${id}', -1)">
                                         <i class="bi bi-dash"></i>
                                     </button>
                                     <span class="px-2">${item.quantity}</span>
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity(${index}, 1)">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity('${id}', 1)">
                                         <i class="bi bi-plus"></i>
                                     </button>
                                 </div>
                             </div>
                             <div class="col-4 text-end">
                                 <h6 class="text-danger mb-2">${(item.price * item.quantity).toLocaleString()} ج.م</h6>
-                                <button class="btn btn-sm btn-danger" onclick="removeFromCart(${index})">
+                                <button class="btn btn-sm btn-danger" onclick="removeFromCart('${id}')">
                                     <i class="bi bi-trash"></i> حذف
                                 </button>
                             </div>
@@ -285,21 +285,25 @@
         }
 
         // تحديث الكمية
-        function updateQuantity(index, change) {
-            cart[index].quantity += change;
-            if (cart[index].quantity < 1) cart[index].quantity = 1;
-            updateCart();
+        function updateQuantity(id, change) {
+            if (cart[id]) {
+                cart[id].quantity += change;
+                if (cart[id].quantity < 1) cart[id].quantity = 1;
+                updateCart();
+            }
         }
 
         // إزالة منتج
-        function removeFromCart(index) {
-            cart.splice(index, 1);
-            updateCart();
+        function removeFromCart(id) {
+            if (cart[id]) {
+                delete cart[id];
+                updateCart();
+            }
         }
 
         // تحديث السلة
         function updateCart() {
-            if (!cart || cart.length === 0) {
+            if (!cart || Object.keys(cart).length === 0) {
                 window.location.href = 'index.html';
                 return;
             }
@@ -318,10 +322,6 @@
             
             // التحقق من أكواد الخصم
             switch(code) {
-                case 'E20':
-                    currentDiscount = 0.20; // 20% خصم
-                    appliedDiscountCode = code;
-                    break;
                 case 'E10':
                     currentDiscount = 0.10; // 10% خصم
                     appliedDiscountCode = code;
@@ -339,7 +339,7 @@
 
         // تحديث المجموع الكلي
         function updateOrderTotal() {
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const total = Object.values(cart).reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const discountAmount = total * currentDiscount;
             const finalTotal = total - discountAmount;
 
@@ -350,7 +350,7 @@
 
         // دالة حساب المجموع النهائي
         function calculateFinalTotal() {
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const total = Object.values(cart).reduce((sum, item) => sum + (item.price * item.quantity), 0);
             return total - (total * currentDiscount);
         }
 
