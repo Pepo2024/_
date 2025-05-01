@@ -966,3 +966,155 @@
 </script>
 </body>
 </html>
+<script>
+// تهيئة السلة من Local Storage عند تحميل الصفحة
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
+let cartTotal = 0;
+
+// تحديث عداد السلة وعرض المنتجات
+function updateCart() {
+    const cartCount = document.getElementById('floatingCartCount');
+    const cartItems = document.getElementById('cartItems');
+    const cartTotalElement = document.getElementById('cartTotal');
+    
+    cartCount.textContent = cart.length;
+    cartItems.innerHTML = '';
+    cartTotal = 0;
+    
+    cart.forEach((item, index) => {
+        cartTotal += item.price * item.quantity;
+        cartItems.innerHTML += `
+            <div class="card mb-2">
+                <div class="card-body p-2">
+                    <div class="d-flex align-items-center">
+                        <img src="${item.image}" class="me-2" style="width: 60px; height: 60px; object-fit: cover;">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-1">${item.name}</h6>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-danger">${item.price} ج.م</span>
+                                <div class="quantity-control">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity(${index}, -1)">-</button>
+                                    <span class="mx-2">${item.quantity}</span>
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="updateQuantity(${index}, 1)">+</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm text-danger" onclick="removeFromCart(${index})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    cartTotalElement.textContent = `${cartTotal} ج.م`;
+    localStorage.setItem('cart', JSON.stringify(cart));
+}
+
+// إضافة منتج للسلة
+function addToCart(productId) {
+    const productCard = document.querySelector(`[data-product-id="${productId}"]`);
+    const product = {
+        id: productId,
+        name: productCard.querySelector('.product-title').textContent,
+        price: parseInt(productCard.querySelector('.product-price').textContent),
+        image: productCard.querySelector('.product-img').src,
+        quantity: 1
+    };
+    
+    const existingProduct = cart.find(item => item.id === productId);
+    if (existingProduct) {
+        existingProduct.quantity++;
+    } else {
+        cart.push(product);
+    }
+    
+    updateCart();
+    showToast('تم إضافة المنتج إلى السلة');
+}
+
+// تحديث كمية المنتج
+function updateQuantity(index, change) {
+    cart[index].quantity = Math.max(1, cart[index].quantity + change);
+    updateCart();
+}
+
+// إزالة منتج من السلة
+function removeFromCart(index) {
+    cart.splice(index, 1);
+    updateCart();
+}
+
+// تفريغ السلة
+function clearCart() {
+    cart = [];
+    updateCart();
+}
+
+// إظهار رسالة تأكيد
+function showToast(message) {
+    const toastContainer = document.createElement('div');
+    toastContainer.className = 'toast-container';
+    toastContainer.innerHTML = `
+        <div class="toast show" role="alert">
+            <div class="toast-body">
+                ${message}
+            </div>
+        </div>
+    `;
+    document.body.appendChild(toastContainer);
+    setTimeout(() => toastContainer.remove(), 3000);
+}
+
+// معالجة إتمام الشراء
+document.getElementById('checkoutBtn').addEventListener('click', function() {
+    if (cart.length === 0) {
+        showToast('السلة فارغة');
+        return;
+    }
+    
+    // تجهيز بيانات الطلب
+    const orderDetails = cart.map(item => `${item.name} (${item.quantity}x)`).join('\n');
+    document.getElementById('productName').value = orderDetails;
+    document.getElementById('productPrice').value = cartTotal;
+    document.getElementById('totalPrice').textContent = `الإجمالي: ${cartTotal} ج.م`;
+    
+    // عرض نافذة الطلب
+    const orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
+    orderModal.show();
+});
+
+// معالجة تقديم الطلب
+document.getElementById('orderForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // إرسال الطلب (يمكنك إضافة الكود الخاص بإرسال الطلب هنا)
+    showToast('تم إرسال طلبك بنجاح');
+    clearCart();
+    
+    // إغلاق النافذة المنبثقة
+    const orderModal = bootstrap.Modal.getInstance(document.getElementById('orderModal'));
+    orderModal.hide();
+});
+
+// تهيئة السلة عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    updateCart();
+    
+    // إضافة مستمعي الأحداث لأزرار الشراء
+    document.querySelectorAll('.buy-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.closest('.product-card').dataset.productId;
+            addToCart(productId);
+        });
+    });
+});
+
+// إغلاق السلة
+function closeCart() {
+    document.getElementById('cartDropdown').classList.remove('show');
+}
+</script>
+</body>
+</html>
