@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الأسئلة المقدمة - سؤال محيرني</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+        :root {
+            --primary-color: #2c5382;
+            --secondary-color: #1a365d;
+            --background-color: #b9b9b993;
+            --card-background: #ffffffc6;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+            background: linear-gradient(135deg, #2c5282, #1a365d);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+                        linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.1) 75%),
+                        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.1) 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            opacity: 0.1;
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+        }
+
+        .questions-container {
+            display: grid;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .questions-container.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .question-card {
+            background-color: var(--card-background);
+            padding: 1.8rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            border: 1px solid #e0e0e0;
+            animation: fadeIn 0.5s ease-out forwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .question-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, #2c5282, #1a365d);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-card p {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            color: var(--text-color);
+            line-height: 1.8;
+        }
+
+        .question-card .timestamp {
+            color: #666;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .question-card .timestamp::before {
+            content: "🕒";
+            font-size: 1rem;
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 2rem;
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 1rem;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-questions {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            font-size: 1.2rem;
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .error {
+            text-align: center;
+            padding: 2rem;
+            color: #e74c3c;
+            font-size: 1.2rem;
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .retry-btn {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #2c5282, #1a365d);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .retry-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            header {
+                padding: 1.5rem 0;
+            }
+
+            header h1 {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>الأسئلة المقدمة</h1>
+            <p> الأسئلة التي تم تقديمها</p>
+        </header>
+
+        <div id="questionsList" class="questions-container">
+            <!-- Questions will be loaded here dynamically -->
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCwDYLI5XOCt39eewbQb7Q9G-DTFX49Ptg",
+            authDomain: "sual-muhayirni.firebaseapp.com",
+            databaseURL: "https://sual-muhayirni-default-rtdb.firebaseio.com",
+            projectId: "sual-muhayirni",
+            storageBucket: "sual-muhayirni.firebasestorage.app",
+            messagingSenderId: "912027176376",
+            appId: "1:912027176376:web:9606677caf14433df8934d",
+            measurementId: "G-JHC7WT4TRT"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        // Get DOM elements
+        const questionsList = document.getElementById('questionsList');
+
+        // Show questions container with animation
+        questionsList.classList.add('show');
+
+        // Function to format timestamp
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 24 * 60 * 60 * 1000) {
+                const hours = Math.floor(diff / (60 * 60 * 1000));
+                if (hours === 0) {
+                    const minutes = Math.floor(diff / (60 * 1000));
+                    return `منذ ${minutes} دقيقة`;
+                }
+                return `منذ ${hours} ساعة`;
+            }
+            
+            return date.toLocaleDateString('ar-SA', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Function to create question card
+        function createQuestionCard(question, index) {
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.style.animationDelay = `${index * 0.1}s`;
+            
+            const questionText = document.createElement('p');
+            questionText.textContent = question.text;
+            
+            const timestamp = document.createElement('div');
+            timestamp.className = 'timestamp';
+            timestamp.textContent = formatDate(question.timestamp);
+            
+            card.appendChild(questionText);
+            card.appendChild(timestamp);
+            
+            return card;
+        }
+
+        // Function to load questions
+        function loadQuestions() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading-state';
+            loadingDiv.innerHTML = `
+                <div class="spinner"></div>
+                <p>جاري تحميل الأسئلة...</p>
+            `;
+            questionsList.appendChild(loadingDiv);
+
+            firebase.database().ref('questions').on('value', (snapshot) => {
+                questionsList.innerHTML = '';
+                
+                if (!snapshot.exists()) {
+                    const noQuestionsDiv = document.createElement('div');
+                    noQuestionsDiv.className = 'no-questions';
+                    noQuestionsDiv.innerHTML = `
+                        <p>لا توجد أسئلة حتى الآن</p>
+                        <p class="sub-text">كن أول من يشارك سؤالاً محيراً!</p>
+                    `;
+                    questionsList.appendChild(noQuestionsDiv);
+                    return;
+                }
+                
+                const questions = Object.values(snapshot.val())
+                    .sort((a, b) => b.timestamp - a.timestamp);
+                
+                questions.forEach((question, index) => {
+                    const card = createQuestionCard(question, index);
+                    questionsList.appendChild(card);
+                });
+            }, (error) => {
+                console.error('Error loading questions:', error);
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error';
+                errorDiv.innerHTML = `
+                    <p>حدث خطأ أثناء تحميل الأسئلة</p>
+                    <button onclick="loadQuestions()" class="retry-btn">إعادة المحاولة</button>
+                `;
+                questionsList.appendChild(errorDiv);
+            });
+        }
+
+        // Load questions when page loads
+        loadQuestions();
+    </script>
+</body>
+</html> 

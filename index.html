@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سؤال محيرني</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+        :root {
+            --primary-color: #2c5382;
+            --secondary-color: #1a365d;
+            --background-color: #b9b9b993;
+            --card-background: #ffffffc6;
+            --text-color: #1a365d;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.63);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+            background: linear-gradient(135deg, #2c5282, #1a365d);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+                        linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.1) 75%),
+                        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.1) 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            opacity: 0.1;
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+        }
+
+        main {
+            background-color: var(--card-background);
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+            transition: var(--transition);
+        }
+
+        main:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.8rem;
+            color: var(--secondary-color);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 180px;
+            padding: 1.2rem;
+            border: 2px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            resize: vertical;
+            transition: var(--transition);
+            background-color: #f8f9fa;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .submit-btn {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, #2c5282, #1a365d);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--transition);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            transition: 0.5s;
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-top: 2rem;
+            animation: slideIn 0.5s ease-out forwards;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .success-message h2 {
+            color: #2c5282;
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+        }
+
+        .success-message p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            header {
+                padding: 1.5rem 0;
+            }
+
+            header h1 {
+                font-size: 2.2rem;
+            }
+
+            main {
+                padding: 1.5rem;
+            }
+
+            .submit-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>سؤال محيرني</h1>
+            <p> سؤالك الغريب او المحير معنا بشكل مجهول</p>
+        </header>
+
+        <main>
+            <form id="questionForm">
+                <div class="form-group">
+                    <label for="question">اكتب سؤالك هنا:</label>
+                    <textarea id="question" name="question" required placeholder="اكتب سؤالك الغريب او المحير هنا..."></textarea>
+                </div>
+                <button type="submit" class="submit-btn">إرسال السؤال</button>
+            </form>
+        </main>
+
+        <div id="successMessage" class="success-message">
+            <h2>تم استلام سؤالك بنجاح! 😊</h2>
+            <p>
+                مع أنك مجهول لينا، لكنك مش مجهول لربنا.
+                <br>
+                 مستنيك تسمع النصيحة يوم الجمعة الجاية لي السؤال بتاعك
+                <br>
+                اجتمعنا في البلكونة الساعة 10 بي الظبط
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCwDYLI5XOCt39eewbQb7Q9G-DTFX49Ptg",
+            authDomain: "sual-muhayirni.firebaseapp.com",
+            databaseURL: "https://sual-muhayirni-default-rtdb.firebaseio.com",
+            projectId: "sual-muhayirni",
+            storageBucket: "sual-muhayirni.firebasestorage.app",
+            messagingSenderId: "912027176376",
+            appId: "1:912027176376:web:9606677caf14433df8934d",
+            measurementId: "G-JHC7WT4TRT"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        // Get DOM elements
+        const questionForm = document.getElementById('questionForm');
+        const submitButton = document.querySelector('.submit-btn');
+        const questionTextarea = document.getElementById('question');
+        const successMessage = document.getElementById('successMessage');
+
+        // Function to show loading state
+        function setLoading(isLoading) {
+            submitButton.disabled = isLoading;
+            submitButton.innerHTML = isLoading ? 
+                '<span class="loading">جاري الإرسال...</span>' : 
+                'إرسال السؤال';
+        }
+
+        // Handle form submission
+        questionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const questionText = questionTextarea.value.trim();
+            
+            if (!questionText) {
+                alert('الرجاء كتابة سؤال');
+                questionTextarea.focus();
+                return;
+            }
+
+            try {
+                setLoading(true);
+                
+                const questionsRef = firebase.database().ref('questions');
+                
+                const newQuestion = {
+                    text: questionText,
+                    timestamp: Date.now()
+                };
+
+                await questionsRef.push(newQuestion);
+
+                questionForm.reset();
+                successMessage.classList.add('show');
+                
+                // Scroll to success message
+                successMessage.scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                console.error('Error submitting question:', error);
+                alert('حدث خطأ أثناء إرسال السؤال. الرجاء المحاولة مرة أخرى.');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // Add character counter
+        questionTextarea.addEventListener('input', function() {
+            const maxLength = 500;
+            const currentLength = this.value.length;
+            
+            if (currentLength > maxLength) {
+                this.value = this.value.substring(0, maxLength);
+                alert('تم تجاوز الحد الأقصى للحروف');
+            }
+        });
+    </script>
+</body>
+</html> 
