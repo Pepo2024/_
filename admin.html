@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة إدارة المجاميع</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="firebase-integration.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-cogs"></i> لوحة إدارة المجاميع</h1>
+            <button class="add-person-btn" onclick="showAddPersonModal()">
+                <i class="fas fa-plus"></i> إضافة شخص
+            </button>
+            <a href="index.html" class="add-person-btn" style="background: #333; color: #ffd700; margin-right: 10px;">
+                <i class="fas fa-eye"></i> عرض الموقع الرئيسي
+            </a>
+        </header>
+        <section class="all-groups">
+            <h2>إدارة جميع المجاميع</h2>
+            <div class="groups-container">
+                <div class="group-section" id="group1-section">
+                    <h3>المجموعة الأولى</h3>
+                    <div class="players-list" id="group1-players"></div>
+                </div>
+                <div class="group-section" id="group2-section">
+                    <h3>المجموعة الثانية</h3>
+                    <div class="players-list" id="group2-players"></div>
+                </div>
+                <div class="group-section" id="group3-section">
+                    <h3>المجموعة الثالثة</h3>
+                    <div class="players-list" id="group3-players"></div>
+                </div>
+                <div class="group-section" id="group4-section">
+                    <h3>المجموعة الرابعة</h3>
+                    <div class="players-list" id="group4-players"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <!-- Add Person Modal -->
+    <div class="modal" id="addPersonModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>إضافة شخص جديد</h3>
+                <button class="close-btn" onclick="closeAddPersonModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="addPersonForm">
+                <div class="form-group">
+                    <label for="personName">اسم الشخص:</label>
+                    <input type="text" id="personName" required>
+                </div>
+                <div class="form-group">
+                    <label for="personGroup">المجموعة:</label>
+                    <select id="personGroup" required>
+                        <option value="">اختر المجموعة</option>
+                        <option value="1">المجموعة الأولى</option>
+                        <option value="2">المجموعة الثانية</option>
+                        <option value="3">المجموعة الثالثة</option>
+                        <option value="4">المجموعة الرابعة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="personPoints">النقاط الأولية:</label>
+                    <input type="number" id="personPoints" value="0" min="0">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="submit-btn">إضافة</button>
+                    <button type="button" class="cancel-btn" onclick="closeAddPersonModal()">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- Edit Points Modal -->
+    <div class="modal" id="editPointsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>تعديل النقاط</h3>
+                <button class="close-btn" onclick="closeEditPointsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="editPointsForm">
+                <div class="form-group">
+                    <label for="editPersonName">اسم الشخص:</label>
+                    <input type="text" id="editPersonName" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="editPersonPoints">النقاط الجديدة:</label>
+                    <input type="number" id="editPersonPoints" min="0" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="submit-btn">حفظ</button>
+                    <button type="button" class="cancel-btn" onclick="closeEditPointsModal()">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="admin.js"></script>
+</body>
+</html> 

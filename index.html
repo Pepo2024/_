@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام المجاميع</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="firebase-integration.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-trophy"></i> نظام المجاميع</h1>
+        </header>
+
+        <!-- Hero Section - Top 1 from each group -->
+        <section class="hero-section">
+            <h2>الأوائل من كل مجموعة</h2>
+            <div class="hero-grid">
+                <div class="group-card" data-group="1">
+                    <h3>المجموعة الأولى</h3>
+                    <div class="top-players" id="group1-top"></div>
+                </div>
+                <div class="group-card" data-group="2">
+                    <h3>المجموعة الثانية</h3>
+                    <div class="top-players" id="group2-top"></div>
+                </div>
+                <div class="group-card" data-group="3">
+                    <h3>المجموعة الثالثة</h3>
+                    <div class="top-players" id="group3-top"></div>
+                </div>
+                <div class="group-card" data-group="4">
+                    <h3>المجموعة الرابعة</h3>
+                    <div class="top-players" id="group4-top"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Scroll Indicator -->
+        <div class="scroll-indicator">
+            <i class="fas fa-chevron-down"></i>
+            <span>اسحب للأسفل لرؤية جميع المجاميع</span>
+        </div>
+
+        <!-- All Groups Section -->
+        <section class="all-groups">
+            <h2>جميع المجاميع</h2>
+            <div class="groups-container">
+                <div class="group-section" id="group1-section">
+                    <h3>المجموعة الأولى</h3>
+                    <div class="players-list" id="group1-players"></div>
+                </div>
+                <div class="group-section" id="group2-section">
+                    <h3>المجموعة الثانية</h3>
+                    <div class="players-list" id="group2-players"></div>
+                </div>
+                <div class="group-section" id="group3-section">
+                    <h3>المجموعة الثالثة</h3>
+                    <div class="players-list" id="group3-players"></div>
+                </div>
+                <div class="group-section" id="group4-section">
+                    <h3>المجموعة الرابعة</h3>
+                    <div class="players-list" id="group4-players"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
